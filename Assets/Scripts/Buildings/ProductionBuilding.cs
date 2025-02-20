@@ -13,6 +13,7 @@ public interface IStationable
         }
     }//默认实现
 }
+
 /// <summary>
 /// 广义上的生产建筑即有massProduction表的建筑，所以也包含仅消耗的建筑
 /// </summary>
@@ -24,7 +25,7 @@ public abstract class ProductionBuilding : BaseBuilding
     {
         if (buildingInfoPro.buildingInfo.group == 1 || buildingInfoPro.buildingInfo.group == 4)
         {
-            return MapManager.Instance.RobotMultiplier + LivabilityManager.Instance.livability * 0.02f;
+            return ResourceManager.Instance.RobotMultiplier + LivabilityManager.Instance.livability * 0.02f;
         }
         return 0;//仅消耗的建筑不受全局加成
     }
@@ -41,7 +42,7 @@ public abstract class ProductionBuilding : BaseBuilding
         }
         if (buildingInfoPro.buildingInfo.group == 1 || buildingInfoPro.buildingInfo.group == 4)//仅消耗的建筑不受LAN加成
         {
-            if (HasNeighbor("LAN"))
+            if (HasNeighbor("LAN",4.01f))
             {
                 environmentMultiplier += 0.2f;
             }
@@ -72,11 +73,16 @@ public class StationableProductionBuilding : ProductionBuilding, IStationable
     }
 }
 
-public class UnstationableProductionBuilding : ProductionBuilding
+public class AutomaticProductionBuilding : ProductionBuilding
 {
+    public bool IsFunctioning { get; set; } = true;
     public override void RecalculateMultiplier()
     {
-        multiplier = 1 + EnvironmentMultiplier() + GlobalMultiplier();
+        multiplier = 0;
+        if (IsFunctioning)
+        {
+            multiplier = 1 + EnvironmentMultiplier() + GlobalMultiplier();
+        }
     }
 }
 /// <summary>
@@ -97,7 +103,7 @@ public class SingleProductionBuilding : StationableProductionBuilding
             }
             if (pair.Key == "chip_part")
             {
-                localProduction[pair.Key] += (multiplier + MapManager.Instance.AIMultiplier) * pair.Value * Time.deltaTime;
+                localProduction[pair.Key] += (multiplier + ResourceManager.Instance.AIMultiplier) * pair.Value * Time.deltaTime;
             }
             else
             {

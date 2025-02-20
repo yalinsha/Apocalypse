@@ -17,6 +17,8 @@ public class MapRenderer : MonoBehaviour
     }
     Tilemap tilemap;
     Tile currentTile;
+    Tile mistTile;
+    Tile unbuildableTile;
     Vector2Int lastPosition;
     static readonly Color translucent = new(1, 1, 1, 0.7f);
     static readonly Color translucentGreen = new(0, 1, 0, 0.7f);
@@ -25,6 +27,8 @@ public class MapRenderer : MonoBehaviour
     private void Start()
     {
         tilemap = GetComponent<Tilemap>();
+        mistTile = Resources.Load<Tile>("Tiles/mist");
+        unbuildableTile = Resources.Load<Tile>("Tiles/unbuildable");
         Vector3Int v;
         for (int i = -MapManager.mapSize; i <= MapManager.mapSize; ++i)
         {
@@ -39,6 +43,38 @@ public class MapRenderer : MonoBehaviour
         EventManager.Instance.onDemolish += (BaseBuilding building) =>
         {
             tilemap.SetTile(building.position.ToVector3Int(2), null);
+        };
+        EventManager.Instance.onVisibilityUpdated += () =>
+        {
+            for (int i = -MapManager.mapSize; i <= MapManager.mapSize; ++i)
+            {
+                for (int j = -MapManager.mapSize; j <= MapManager.mapSize; ++j)
+                {
+                    Vector2Int v = new(i, j);
+                    Tile t = null;
+                    if (!MapManager.Instance.visibilityMap.ContainsKey(v) || !MapManager.Instance.visibilityMap[v])
+                    {
+                        t = mistTile;
+                    }
+                    tilemap.SetTile(v.ToVector3Int(3), t);
+                }
+            }
+        };
+        EventManager.Instance.onBuildabilityUpdated += () =>
+        {
+            for (int i = -MapManager.mapSize; i <= MapManager.mapSize; ++i)
+            {
+                for (int j = -MapManager.mapSize; j <= MapManager.mapSize; ++j)
+                {
+                    Vector2Int v = new(i, j);
+                    Tile t = null;
+                    if (!MapManager.Instance.buildabilityMap.ContainsKey(v) || !MapManager.Instance.buildabilityMap[v])
+                    {
+                        t = unbuildableTile;
+                    }
+                    tilemap.SetTile(v.ToVector3Int(1), t);
+                }
+            }
         };
     }
     //地形瓦片在0层，表示不可建造的灰色透明瓦片在1层，建筑瓦片在2层，迷雾瓦片在3层，建造模式的悬浮瓦片在4层

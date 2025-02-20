@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 /// <summary>
 /// 管理地形数据、土地利用数据和建筑分类登记表等
 /// </summary>
@@ -21,18 +19,13 @@ public class MapManager : MonoBehaviour
         EventManager.Instance.onStartConstruct += (BaseBuilding building) =>
         {
             Vector2Int v;
-            for (int i = 0; i < building.span.x; i++)
+            for (int i = 0; i < building.span.x; i++)//添加到土地利用表
             {
                 for (int j = 0; j < building.span.y; j++)
                 {
                     v = building.position + new Vector2Int(i, j);
                     landUseMap[v] = building;
                 }
-            }//添加到土地利用表
-            buildings.Add(building);//添加到建筑集合
-            if (building.buildingName == "MantleSampling")//记录已有采样站的地形
-            {
-                samplingDict[landscapeMap[building.position]] = true;
             }
             //记录该种建筑的数量，用来判断再建造会不会超出上限
             //这一游戏机制可能会改
@@ -43,6 +36,10 @@ public class MapManager : MonoBehaviour
             else
             {
                 ++ buildingCountDict[building.buildingName];
+            }
+            if (building.buildingName == "MantleSampling")//记录已有采样站的地形
+            {
+                samplingDict[landscapeMap[building.position]] = true;
             }
         };
         EventManager.Instance.onDemolish += (BaseBuilding building) =>
@@ -57,26 +54,46 @@ public class MapManager : MonoBehaviour
                 }
             }//从土地利用表中移除
             buildings.Remove(building);//从建筑集合中移除
+            --buildingCountDict[building.buildingName];
             if (building.buildingName == "MantleSampling")//重置已有采样站的地形
             {
                 samplingDict[landscapeMap[building.position]] = false;
             }
-        };
-        EventManager.Instance.onStartUpgrade += (BaseBuilding building) =>
-        {
-            if (!(freeUpgradeDict.ContainsKey(building.buildingName) && freeUpgradeDict[building.buildingName]) || building.level == 0)//如果建造也可以免费就不加最后一个条件
+            if (building.buildingName == "AirTower")
             {
-                EventManager.Instance.onResourceChanged(building.buildingInfoPro.upgradeCostList[building.level],1);
+                airTowerPositions.Remove(building.position);
+                UpdateBuildability();
             }
-            freeUpgradeDict[building.buildingName] = false;
+            if (building.buildingName == "Magnetic")
+            {
+                magneticPositions.Remove(building.position);
+                UpdateVisibility();
+            }
         };
         EventManager.Instance.onFinishUpgrade += (BaseBuilding building) =>
         {
+            buildings.Add(building);//添加到建筑集合
             if (!highestLevelDict.ContainsKey(building.buildingName)|| highestLevelDict[building.buildingName] < building.level)
             {
                 highestLevelDict[building.buildingName] = building.level;
             }
+            if (building.buildingName == "AILab" && AITimesLeft > 0)
+            {
+                --AITimesLeft;
+                EventManager.Instance.onResourceChanged(new() { { "chip", ResourceManager.Instance.GetResourceCount("chip") / 2 } }, 1);
+            }
+            if(building.buildingName == "AirTower")
+            {
+                airTowerPositions.Add(building.position);
+                UpdateBuildability();
+            }
+            if (building.buildingName == "Magnetic")
+            {
+                magneticPositions.Add(building.position);
+                UpdateVisibility();
+            }
         };
+        
     }
     public const int mapSize = 30;//横纵坐标绝对值的上限
     public Dictionary<Vector2Int, bool> visibilityMap = new();
@@ -86,19 +103,13 @@ public class MapManager : MonoBehaviour
     public HashSet<BaseBuilding> buildings = new();
     public Dictionary<string,int> highestLevelDict = new();
     public Dictionary<string,int> buildingCountDict = new();
-    public Dictionary<string, bool> freeUpgradeDict = new();
     public Dictionary<int, bool> samplingDict = new()
     {
         {1,false }, {2,false}, {4,false}, {8,false}, {32,false},
     };//记录各地形上是否已有地幔采样站
-    public float RobotMultiplier
-    {
-        get; private set;
-    }
-    public float AIMultiplier
-    {
-        get; private set;
-    }
+    HashSet<Vector2Int> magneticPositions = new();
+    HashSet<Vector2Int> airTowerPositions = new();
+    public int AITimesLeft { get; private set; } = 3;
     public bool CanBuild(string buildingName,Vector2Int position,bool flip)
     {
         BuildingInfoPro info = BuildingInfoManager.Instance.buildingInfoDict[buildingName];
@@ -143,25 +154,25 @@ public class MapManager : MonoBehaviour
                 return false;
             }
         }
-        else if (buildingName == "EcoGarden" && IsNear(v, span, new List<string> { "Mining", "OilWell", "NuclearPlant", "MantleSampling" }))
+        else if (buildingName == "EcoGarden" && IsNear(v, span, new List<string> { "Mining", "OilWell", "NuclearPlant", "MantleSampling" }, false))
         {
             return false;
         }
-        else if (buildingName == "HighLab" && IsNear(v, span, new List<string> { "WaterStation", "Corn" }))
+        else if (buildingName == "HighLab" && IsNear(v, span, new List<string> { "WaterStation", "Corn" }, false))
         {
             return false;
         }
-        else if ((new List<string> { "Mining", "OilWell", "NuclearPlant", "MantleSampling" }.Contains(buildingName)) && IsNear(v, span, new List<string> { "EcoGarden" }))
+        else if ((new List<string> { "Mining", "OilWell", "NuclearPlant", "MantleSampling" }.Contains(buildingName)) && IsNear(v, span, new List<string> { "EcoGarden" }, false))
         {
             return false;
         }
-        else if ((new List<string> { "WaterStation", "Corn" }.Contains(buildingName)) && IsNear(v, span, new List<string> { "HighLab" }))
+        else if ((new List<string> { "WaterStation", "Corn" }.Contains(buildingName)) && IsNear(v, span, new List<string> { "HighLab" }, false))
         {
             return false;
         }
         else if (buildingName == "MantleSampling")
         {
-            //不能跨地形建造
+            //不能跨地形建造，默认采样站是2*2
             if (landscapeMap[v] != landscapeMap[v + Vector2Int.right]
              || landscapeMap[v] != landscapeMap[v + Vector2Int.up]
              || landscapeMap[v] != landscapeMap[v + Vector2Int.up + Vector2Int.right])
@@ -178,7 +189,7 @@ public class MapManager : MonoBehaviour
     /// <summary>
     /// 地块是否与建筑类别列表中的任意一种相邻，标准是欧式距离不超过range（默认为3.01f）。
     /// </summary>
-    public bool IsNear(Vector2Int position, Vector2Int span, List<string> buildingNames, float range = 3.01f)
+    public bool IsNear(Vector2Int position, Vector2Int span, List<string> buildingNames, bool functioningOnly, float range = 3.01f)
     {
         Vector2Int u, v;
         int t = Mathf.CeilToInt(range);
@@ -195,7 +206,20 @@ public class MapManager : MonoBehaviour
                         {
                             u = v + new Vector2Int(ii, jj);
                             if (landUseMap.ContainsKey(u) && landUseMap[u] != null && buildingNames.Contains(landUseMap[u].buildingName))
-                                return true;
+                            {
+                                if (!functioningOnly)
+                                {
+                                    return true;
+                                }
+                                if (landUseMap[u] is IStationable stationable && stationable.StationedCount > 0 || landUseMap[u] is AutomaticProductionBuilding automatic && automatic.IsFunctioning)
+                                {
+                                    return true;
+                                }
+                                if(landUseMap[u] is not IStationable && landUseMap[u] is not AutomaticProductionBuilding)
+                                {
+                                    return true;
+                                }
+                            }
                         }
                     }
                 }
@@ -216,57 +240,109 @@ public class MapManager : MonoBehaviour
         {
             span = new Vector2Int(info.sizeY, info.sizeX);
         }
+        Type type = null;
         switch (info.group)
         {
-            case 1://标准生产建筑
-                gameObject.AddComponent<StationableProductionBuilding>().Initialize(buildingName, position, span);
+            case 1://基础资源生产建筑
+                type = typeof(StationableProductionBuilding);
                 break;
             case 2://消耗物资的功能建筑
-                switch (info.buildingName)
+                switch (buildingName)
                 {
                     case "NursingHouse":
-                        gameObject.AddComponent<NursingHouse>().Initialize(buildingName, position, span);
-                        break;
-                    case "LAN":
-                        gameObject.AddComponent<LAN>().Initialize(buildingName, position, span);
+                        type = typeof(NursingHouse);
                         break;
                     case "Gym":
-                        gameObject.AddComponent<Gym>().Initialize(buildingName, position, span);
+                        type = typeof(Gym);
                         break;
                     case "RobotFactory":
-                        gameObject.AddComponent<RobotFactory>().Initialize(buildingName, position, span);
+                        type = typeof(StationableProductionBuilding);
+                        break;
+                    case "LAN":
+                        type = typeof(AutomaticProductionBuilding);
                         break;
                 }
                 break;
-            case 3:
-                switch (info.buildingName)
+            case 3://不消耗资源的建筑
+                if (buildingName == "EcoGarden")
                 {
-                    case "EcoGarden":
-                        gameObject.AddComponent<EcoGarden>().Initialize(buildingName, position, span);
-                        break;
-                    case "Magnetic":
-                        gameObject.AddComponent<Magnetic>().Initialize(buildingName, position, span);
-                        break;
-                    case "AirTower":
-                        gameObject.AddComponent<AirTower>().Initialize(buildingName, position, span);
-                        break;
-                    case "AILab":
-                        gameObject.AddComponent<AILab>().Initialize(buildingName, position, span);
-                        break;
-                    case "Apartment":
-                        gameObject.AddComponent<Apartment>().Initialize(buildingName, position, span);
-                        break;
-                    case "CellRepair":
-                        gameObject.AddComponent<CellRepair>().Initialize(buildingName, position, span);
-                        break;
-                    case "RocketBase":
-                        gameObject.AddComponent<RocketBase>().Initialize(buildingName, position, span);
-                        break;
+                    type = typeof(EcoGarden);
+                }
+                else
+                {
+                    type = typeof(BaseBuilding);
                 }
                 break;
-            case 4:
-                gameObject.AddComponent<SingleProductionBuilding>().Initialize(buildingName, position, span);
+            case 4://三级资源建筑
+                type = typeof(SingleProductionBuilding);
                 break;
         }
+        (gameObject.AddComponent(type) as BaseBuilding).Initialize(buildingName, position, span);
+    }
+    void UpdateVisibility()
+    {
+        float range = 20.1f;//硬编码
+        for (int i = -mapSize; i <= mapSize; ++i)
+        {
+            for (int j = -mapSize; j <= mapSize; ++j)
+            {
+                visibilityMap[new Vector2Int(i, j)] = false;
+            }
+        }
+        for (int i = -10; i <= 10; ++i)//硬编码
+        {
+            for (int j = -10; j <= 10; ++j)
+            {
+                visibilityMap[new Vector2Int(i, j)] = true;
+            }
+        }
+        foreach (Vector2Int v in magneticPositions)
+        {
+            int t = Mathf.CeilToInt(range);
+            for (int ii = -t; ii <= t; ++ii)
+            {
+                for (int jj = -t; jj <= t; ++jj)
+                {
+                    if (ii * ii + jj * jj <= range * range)
+                    {
+                        visibilityMap[v + new Vector2Int(ii, jj)] = true;
+                    }
+                }
+            }
+        }
+        EventManager.Instance.onVisibilityUpdated();
+    }
+    void UpdateBuildability()
+    {
+        float range = 12.1f;//硬编码
+        for (int i = -mapSize; i <= mapSize; ++i)
+        {
+            for (int j = -mapSize; j <= mapSize; ++j)
+            {
+                buildabilityMap[new Vector2Int(i, j)] = false;
+            }
+        }
+        for (int i = -10; i <= 10; ++i)//硬编码
+        {
+            for (int j = -10; j <= 10; ++j)
+            {
+                buildabilityMap[new Vector2Int(i, j)] = true;
+            }
+        }
+        foreach (Vector2Int v in airTowerPositions)
+        {
+            int t = Mathf.CeilToInt(range);
+            for (int ii = -t; ii <= t; ++ii)
+            {
+                for (int jj = -t; jj <= t; ++jj)
+                {
+                    if (ii * ii + jj * jj <= range * range)
+                    {
+                        buildabilityMap[v + new Vector2Int(ii, jj)] = true;
+                    }
+                }
+            }
+        }
+        EventManager.Instance.onBuildabilityUpdated();
     }
 }

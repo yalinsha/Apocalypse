@@ -11,9 +11,9 @@ public class PopulationManager : MonoBehaviour
     {
         Instance = this;
     }
-    float currentPopulation = 60;
+    public float currentPopulation = 60;
     float maxPopulation = 100;
-    float rate = 0.05f;
+    public float rate = 0.05f;
     int stationedPopulation = 0;
     const float increaseInterval = 30;
     float timeUntilIncrease = increaseInterval;
@@ -29,6 +29,14 @@ public class PopulationManager : MonoBehaviour
                 stationable.StationedCount = newStationedCount;
                 stationedPopulation += newStationedCount;
             }
+            if(building.buildingName == "Apartment")
+            {
+                maxPopulation += 20;//Ó²±àÂë´¦
+            }
+            if (building.buildingName == "CellRepair")
+            {
+                rate += 0.05f;//Ó²±àÂë´¦
+            }
         };
         EventManager.Instance.onDemolish += (BaseBuilding building) =>
         {
@@ -36,6 +44,14 @@ public class PopulationManager : MonoBehaviour
             {
                 stationedPopulation -= stationable.StationedCount;
                 stationable.StationedCount = 0;//È«²¿³·³ö
+            }
+            if (building.buildingName == "Apartment")
+            {
+                maxPopulation -= 20;//Ó²±àÂë´¦
+            }
+            if (building.buildingName == "CellRepair")
+            {
+                rate -= 0.05f;//Ó²±àÂë´¦
             }
         };
     }

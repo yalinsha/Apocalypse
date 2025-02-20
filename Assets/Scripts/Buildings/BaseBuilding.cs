@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
-public abstract class BaseBuilding : MonoBehaviour
+public class BaseBuilding : MonoBehaviour
 {
     public string buildingName;
     public int level = 0;//等级，建造中时是0级
@@ -15,7 +15,8 @@ public abstract class BaseBuilding : MonoBehaviour
     bool isUpgrading = false;
     float timeSinceUpgrade;
     float currentUpgradeDuration;
-    Dictionary<Vector2Int, BaseBuilding> landUseMap = MapManager.Instance.landUseMap;
+    readonly Dictionary<Vector2Int, BaseBuilding> landUseMap = MapManager.Instance.landUseMap;
+
     public virtual void Initialize(string buildingName, Vector2Int position, Vector2Int span)
     {
         this.buildingName = buildingName;
@@ -23,7 +24,8 @@ public abstract class BaseBuilding : MonoBehaviour
         this.span = span;
         buildingInfoPro = BuildingInfoManager.Instance.buildingInfoDict[buildingName];
 
-        EventManager.Instance.onStartConstruct?.Invoke(this);
+        EventManager.Instance.onStartConstruct(this);
+        EventManager.Instance.onStatusChanged();
         StartUpgrade();
     }
     void StartUpgrade()
@@ -38,11 +40,13 @@ public abstract class BaseBuilding : MonoBehaviour
         ++level;
         isUpgrading = false;
         EventManager.Instance.onFinishUpgrade(this);
+        EventManager.Instance.onStatusChanged();
     }
     public void Demolish()
     {
         EventManager.Instance.onDemolish(this);
         Destroy(gameObject);
+        EventManager.Instance.onStatusChanged();
     }
     protected virtual void Update()
     {
@@ -57,13 +61,12 @@ public abstract class BaseBuilding : MonoBehaviour
     }
     protected bool HasNeighbor(string name)
     {
-        return MapManager.Instance.IsNear(position, span, new List<string> { name });
+        return MapManager.Instance.IsNear(position, span, new List<string> { name }, true);
     }
     protected bool HasNeighbor(string name, float range)
     {
-        return MapManager.Instance.IsNear(position, span, new List<string> { name }, range);
+        return MapManager.Instance.IsNear(position, span, new List<string> { name }, true, range);
     }
-    /*
     protected HashSet<BaseBuilding> GetNeighborsInRange(float range)
     {
         Vector2Int u, v;
@@ -88,9 +91,9 @@ public abstract class BaseBuilding : MonoBehaviour
                 }
             }
         }
+        set.Remove(this);
         return set;
     }
-    */
     //决定弹出面板的升级按钮是否置灰
     public bool CanUpgrade()
     {
@@ -105,7 +108,7 @@ public abstract class BaseBuilding : MonoBehaviour
                 return false;
             }
         }
-        if (!MapManager.Instance.freeUpgradeDict.ContainsKey(buildingName) || !MapManager.Instance.freeUpgradeDict[buildingName])
+        if (!ResourceManager.Instance.freeUpgradeDict.ContainsKey(buildingName) || !ResourceManager.Instance.freeUpgradeDict[buildingName])
         {
             foreach (var t in buildingInfoPro.upgradeCostList[level])
             {
