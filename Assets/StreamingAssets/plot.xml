@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<PlotEventCollection>
+<events>
+    <PlotEventInfo><title>天启降临</title><description>进入22世纪后，宇宙发生了突如其来的异变，恒星活动变得异常频繁而剧烈，宇宙进入了【天启纪元】。太阳在影响下变得异常剧烈，无穷无尽的太阳风暴席卷地球，摧毁了地球上的一切电网和通讯系统，并引起气候急剧变化，生态系统崩溃，暴风雪、极端热浪、台风、洪水和无休止的灾难接踵而至，人类社会几乎崩溃。</description><option>确认</option><occurrenceTime>0.5</occurrenceTime></PlotEventInfo>
+    <PlotEventInfo><title>希望不息</title><description>在突如其来的天灾之下，幸存的人类决定利用剩余的资源打造了【星舰】，在宇宙中寻找新的家园。漫长的星际漂泊后，在资源即将耗尽之时，你们坠落在了这颗看似宜居的星球上。然而，这个星系的恒星同样不稳定，天灾仍不会停歇。你需要带领人类，在无尽的天灾中生存下来，修复星舰，奔向宇宙，寻找新的希望。</description><option>确认</option><occurrenceTime>1</occurrenceTime></PlotEventInfo>
+    <PlotEventInfo><title>基础教程</title><description>在游戏中，你需要建造并升级建筑，采集相应资源，来挺过一次次天灾，并最终建造出星舰。
+游戏中的资源包括：水、食物、矿石、石油、电，以及更高级的碳纤维、钛合金以及芯片。
+点击下方的建造菜单，即可选择位置建造建筑。星球上具有多种地貌，一些建筑只有在特定地貌上才能发挥作用。
+建筑需要至少1人力才能运行，向建筑中派遣更多人力可以提高生产率。
+星舰核心是最重要的建筑，其他建筑的等级无法高于星舰核心，星舰核心升级可以解锁更多强力建筑。
+宜居度是一项重要指标，它会提高人口增长速度与建筑生产效率，并降低恶性事件发生的频率。</description><option>明白了</option><occurrenceTime>1.5</occurrenceTime></PlotEventInfo>
+    <PlotEventInfo><title>风暴已至</title><description>太阳风暴已经来临，所有人已经离开工作地点，躲进了避难所。现在，整座城市屏住了呼吸，祈祷着它快点结束。</description><option>祈祷吧</option><occurrenceTime>175</occurrenceTime></PlotEventInfo>
+    <PlotEventInfo><title>太阳风暴</title><description>虽然科学家们已有预警，但这次的太阳风暴超出了所有预测。巨大的太阳爆发释放出无数高能粒子，朝着星球席卷而来。冲击波轻易撕裂了星球的磁场，天空瞬间变的昏暗，所有通讯仪器瞬间失去信号，所有网络系统陷入瘫痪。电力系统陷入崩溃，电线融化，灯光熄灭，电子设备滋滋冒着火花，街道一片死寂。紧接着，高能辐射渗透进城市的每个角落，建筑的金属结构在极端辐射下开始变形，皮肤上的刺痛感穿透了来不及躲避的每一个人，甚至有人因辐射中毒而倒下。</description><option>这就是天启吗</option><occurrenceTime>179.5</occurrenceTime></PlotEventInfo>
+</events>
+</PlotEventCollection>

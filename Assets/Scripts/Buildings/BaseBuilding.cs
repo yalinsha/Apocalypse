@@ -12,17 +12,19 @@ public class BaseBuilding : MonoBehaviour
     public Vector2Int span;//³¤ºÍ¿í
     public BuildingInfoPro buildingInfoPro;
 
-    bool isUpgrading = false;
+    public bool isUpgrading = false;
     float timeSinceUpgrade;
     float currentUpgradeDuration;
     readonly Dictionary<Vector2Int, BaseBuilding> landUseMap = MapManager.Instance.landUseMap;
+
+    public float TimeLeft => currentUpgradeDuration - timeSinceUpgrade;
 
     public virtual void Initialize(string buildingName, Vector2Int position, Vector2Int span)
     {
         this.buildingName = buildingName;
         this.position = position;
         this.span = span;
-        buildingInfoPro = BuildingInfoManager.Instance.buildingInfoDict[buildingName];
+        buildingInfoPro = BuildingInfoManager.Instance.GetBuildingInfo(buildingName);
 
         EventManager.Instance.onStartConstruct(this);
         EventManager.Instance.onStatusChanged();
@@ -112,7 +114,7 @@ public class BaseBuilding : MonoBehaviour
         {
             foreach (var t in buildingInfoPro.upgradeCostList[level])
             {
-                if (ResourceManager.Instance.GetResourceCount(t.Key) < t.Value)
+                if (ResourceManager.Instance.GetResourceAmount(t.Key) < t.Value)
                 {
                     return false;
                 }

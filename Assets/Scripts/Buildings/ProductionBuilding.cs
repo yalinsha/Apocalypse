@@ -25,7 +25,7 @@ public abstract class ProductionBuilding : BaseBuilding
     {
         if (buildingInfoPro.buildingInfo.group == 1 || buildingInfoPro.buildingInfo.group == 4)
         {
-            return ResourceManager.Instance.RobotMultiplier + LivabilityManager.Instance.livability * 0.02f;
+            return ResourceManager.Instance.RobotMultiplier + LivabilityManager.Instance.Livability * 0.02f;
         }
         return 0;//仅消耗的建筑不受全局加成
     }
@@ -53,7 +53,7 @@ public abstract class ProductionBuilding : BaseBuilding
     protected override void Update()
     {
         base.Update();
-        EventManager.Instance.onResourceChanged(buildingInfoPro.massProductionList[level],multiplier);
+        ResourceManager.Instance.ChangeResources(buildingInfoPro.massProductionList[level],multiplier * Time.deltaTime);
     }
 }
 
@@ -75,7 +75,16 @@ public class StationableProductionBuilding : ProductionBuilding, IStationable
 
 public class AutomaticProductionBuilding : ProductionBuilding
 {
-    public bool IsFunctioning { get; set; } = true;
+    bool isFunctioning = false;
+    public bool IsFunctioning
+    {
+        get => isFunctioning;
+        set
+        {
+            isFunctioning = value;
+            EventManager.Instance.onStatusChanged();
+        }
+    }
     public override void RecalculateMultiplier()
     {
         multiplier = 0;
@@ -111,7 +120,7 @@ public class SingleProductionBuilding : StationableProductionBuilding
             }
             if (localProduction[pair.Key] > 1)
             {
-                EventManager.Instance.onResourceChanged(new() { { pair.Key, 1 }, } , 1 );
+                ResourceManager.Instance.ChangeResource(pair.Key,1);
                 --localProduction[pair.Key];
             }
         }
