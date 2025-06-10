@@ -32,11 +32,13 @@ public class SingleInfoPanel : BasePanel<SingleInfoPanel>
             automatic.SetActive(false);
             permanent.SetActive(false);
             add.onClick.RemoveAllListeners();
+            add.onClick.AddListener(EffectManager.Instance.PlayClickSound);
             add.onClick.AddListener(() =>
             {
                 PopulationManager.Instance.IncreaseStation(stationableBuilding);
             });
             minus.onClick.RemoveAllListeners();
+            minus.onClick.AddListener(EffectManager.Instance.PlayClickSound);
             minus.onClick.AddListener(() =>
             {
                 PopulationManager.Instance.DecreaseStation(stationableBuilding);
@@ -50,6 +52,10 @@ public class SingleInfoPanel : BasePanel<SingleInfoPanel>
             toggleFunctioning.onValueChanged.RemoveAllListeners();
             toggleFunctioning.onValueChanged.AddListener((value) =>
             {
+                EffectManager.Instance.PlayClickSound();
+            });
+            toggleFunctioning.onValueChanged.AddListener((value) =>
+            {
                 automaticBuilding.IsFunctioning = value;
             });
         }
@@ -59,16 +65,8 @@ public class SingleInfoPanel : BasePanel<SingleInfoPanel>
             automatic.SetActive(false);
             permanent.SetActive(true);
         }
-
-        if (building.isUpgrading)
-        {
-            underConstruction.SetActive(true);
-            regular.SetActive(false);
-            worker.text = (building.buildingInfoPro.buildingInfo.sizeX * building.buildingInfoPro.buildingInfo.sizeY).ToString();
-            return;
-        }
-
-        if(building is ProductionBuilding production)//暂未考虑仅消耗的情况
+        Debug.Log("Updating Info," + building);
+        if(building is ProductionBuilding)//暂未考虑仅消耗的情况
         {
             productionMultiplier.SetActive(true);
         }
@@ -77,7 +75,13 @@ public class SingleInfoPanel : BasePanel<SingleInfoPanel>
             productionMultiplier.SetActive(false);
             multiplier.text = "";
         }
-        
+        if (building.isUpgrading)
+        {
+            underConstruction.SetActive(true);
+            regular.SetActive(false);
+            worker.text = (building.buildingInfoPro.buildingInfo.workersRequired).ToString();
+            return;
+        }
         UpdateDynamicInfo();
     }
     public void UpdateDynamicInfo()
@@ -94,13 +98,13 @@ public class SingleInfoPanel : BasePanel<SingleInfoPanel>
             regular.SetActive(true);
             if (currentBuilding is ProductionBuilding production)//暂未考虑仅消耗的情况
             {
-                multiplier.text = production.multiplier * 100 + "%";
+                multiplier.text = Mathf.RoundToInt(production.multiplier * 100) + "%";
             }
             if(currentBuilding is IStationable stationableBuilding)
             {
                 stationed.text = stationableBuilding.StationedCount.ToString();
-                add.interactable = (stationableBuilding.StationedCount < PopulationManager.Instance.AvailablePopulation && stationableBuilding.StationedCount < stationableBuilding.MaxStationCount);
-                minus.interactable = (stationableBuilding.StationedCount > 0);
+                add.interactable = (!SolarStormManager.Instance.IsInStorm) && (0 < PopulationManager.Instance.AvailablePopulation && stationableBuilding.StationedCount < stationableBuilding.MaxStationedCount);
+                minus.interactable = (!SolarStormManager.Instance.IsInStorm) && (stationableBuilding.StationedCount > 0);
             }
             else if(currentBuilding is AutomaticProductionBuilding automaticBuilding)
             {
@@ -116,8 +120,17 @@ public class SingleInfoPanel : BasePanel<SingleInfoPanel>
         EventManager.Instance.onStatusChanged += () =>
         {
             Debug.Log("Updating ...");
+            if(currentBuilding is ProductionBuilding production)
+            {
+                Debug.Log("Multiplier: "+ production.multiplier);
+            }
             UpdateDynamicInfo();
-        };//检查一下是否后加
+        };
+        EventManager.Instance.onStartUpgrade += (value)=>
+        {
+            Debug.Log("onStartUpgrade in SingleInfoPanel");
+            UpdateDynamicInfo();
+        };
         Hide();
     }
     private void Update()

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Tilemaps;
 /// <summary>
 /// 处理除了按钮以外的所有交互逻辑
 /// </summary>
@@ -16,41 +17,49 @@ public class OperationManager : MonoBehaviour
         Instance = this;
     }
 
-    const float range = 10;//相机移动边界
+    const float range = 12;//相机移动边界
     const float padding = 10;//屏幕边缘平移区域宽度
     bool isInConstructionMode = false;
     bool flip = false;
     public Grid grid;
     string currentBuildingName = "";
+    public float timeRate = 1;
 
     public void EnterConstructionMode(string buildingName)
     {
         isInConstructionMode = true;
         currentBuildingName = buildingName;
     }
-    // Update is called once per frame
+    private void Start()
+    {
+        MapRenderer.Instance.tilemap.SetTile(Vector2Int.zero.ToVector3Int(2), Resources.Load<Tile>("Tiles/Buildings/StarshipCenter"));
+        MapManager.Instance.Build("StarshipCenter", Vector2Int.zero, false);
+    }
     void Update()
     {
 #if UNITY_EDITOR
-        if (Input.GetKeyDown(KeyCode.S))
+        if (Input.GetKeyDown(KeyCode.F))
         {
-            ResourceManager.Instance.ChangeResources(new Dictionary<string, float>
-            {
-                {"electric", 10000},
-                {"mine", 10000},
-                {"food", 10000},
-                {"water", 10000},
-                {"oil", 10000},
-                {"chip", 10000},
-                {"ti", 10000},
-                {"carbon", 10000},
-                {"nuclear_part", 100},
-                {"life_part", 100},
-                {"shell_part", 100},
-                {"chip_part", 100},
-            });
+            timeRate = 11 - timeRate;
+            Time.timeScale = GameEventManager.Instance.timeOn * timeRate;
+        }
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            GameEventManager.Instance.timeOn = 1 - GameEventManager.Instance.timeOn;
+            Time.timeScale = GameEventManager.Instance.timeOn * timeRate;
         }
 #endif
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            foreach(var building in MapManager.Instance.buildings)
+            {
+                if(building is IStationable stationable)
+                {
+                    PopulationManager.Instance.DecreaseStationToOne(stationable);
+                }
+            }
+            EventManager.Instance.onStatusChanged();
+        }
         //鼠标滚轮控制缩放
         Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize - 300 * Time.unscaledDeltaTime * Input.GetAxis("Mouse ScrollWheel"), 2, 18);
         //定义移动速度

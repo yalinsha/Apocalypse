@@ -23,7 +23,7 @@ public class EventManager : MonoBehaviour
     public UnityAction onVisibilityUpdated, onBuildabilityUpdated;
     public UnityAction<PlotEventInfo> onPlotEvent;
     public UnityAction<RegularEventInfo> onRegularEvent;
-    public UnityAction onSolarStormStart, onGameOver, onSurvive;
+    public UnityAction onSolarStormStart, onGameOver, onSolarStormEnd;
     public UnityAction onLivabilityChanged;
     public UnityAction<string> onResourceExhausted;
 }

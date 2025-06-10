@@ -34,8 +34,8 @@ public class TestMap : MonoBehaviour
                 }
                 tile = tilemap.GetTile(v.ToVector3Int(1));
                 MapManager.Instance.buildabilityMap[v] = (tile == null);
-                tile = tilemap.GetTile(v.ToVector3Int(3));
-                MapManager.Instance.visibilityMap[v] = (tile == null);
+                MapManager.Instance.magneticPositions.Add(Vector2Int.zero);
+                MapManager.Instance.UpdateVisibility();
             }
         }
     }

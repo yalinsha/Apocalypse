@@ -13,15 +13,15 @@ public class BuildingPanel : BasePanel<BuildingPanel>
     {
         new()
         {
-            "Corn","WaterStation","Mining","OilWell","CSolarPlant","SolarPlant","FSolarPlant","NuclearPlant","Refinery","Compression","BiomassPlant"
+            "Corn","WaterStation","Mining","OilWell","SolarPlant","CarbonRefine","NuclearPlant","BiomassPlant"
         },
         new()
         {
-            "AirTower","Apartment","CellRepair","Magnetic","MantleSampling","Gym","NursingHouse","ResearchHouse","EcoGarden","HighLab","AILab","RobotFactory","LAN"
+            "Magnetic","Apartment","CellRepair","Gym","NursingHouse","LAN"
         },
         new()
         {
-            "EnvironmentCenter","NuclearManufactor","QuantumCenter","RadiatLab","RocketBase"
+            "EnvironmentCenter","NuclearManufactor","QuantumCenter","RadiatLab"
         }
     };
     

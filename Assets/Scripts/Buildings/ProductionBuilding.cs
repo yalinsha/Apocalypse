@@ -4,12 +4,13 @@ using UnityEngine;
 
 public interface IStationable
 {
+    public int LastStationedCount {  get; set; }
     public int StationedCount { get; set; }
-    public int MaxStationCount {
+    public int MaxStationedCount {
         get 
         {
             BaseBuilding building = this as BaseBuilding;
-            return building.level > 0 ? building.level + 5 : 0;
+            return building.level == 0 ? 0 : BuffManager.Instance.maxStationedCount;
         }
     }//д╛хой╣ож
 }
@@ -53,12 +54,14 @@ public abstract class ProductionBuilding : BaseBuilding
     protected override void Update()
     {
         base.Update();
-        ResourceManager.Instance.ChangeResources(buildingInfoPro.massProductionList[level],multiplier * Time.deltaTime);
+        if (isUpgrading) return;
+        ResourceManager.Instance.ChangeResources(buildingInfoPro.massProductionList[level - 1],multiplier * Time.deltaTime);
     }
 }
 
 public class StationableProductionBuilding : ProductionBuilding, IStationable
 {
+    public int LastStationedCount {  get; set; }
     public int StationedCount { get; set; }
     public override void RecalculateMultiplier()
     {
@@ -69,6 +72,14 @@ public class StationableProductionBuilding : ProductionBuilding, IStationable
         else
         {
             multiplier = 1 + (StationedCount - 1) * buildingInfoPro.buildingInfo.stationBonus + EnvironmentMultiplier() + GlobalMultiplier();
+            if (BuffManager.Instance.productionBuffs.ContainsKey(buildingName))
+            {
+                multiplier += BuffManager.Instance.productionBuffs[buildingName];
+            }
+            if (multiplier < 0)
+            {
+                multiplier = 0;
+            }
         }
     }
 }

@@ -13,7 +13,9 @@ public class BuildingButton : MonoBehaviour
     public void Initialize(string buildingName)
     {
         this.BuildingName = buildingName;
-        GetComponent<Image>().sprite = Resources.Load<Sprite>("Sprites/Buildings/" + buildingName);
+        Image image = GetComponent<Image>();
+        image.sprite = Resources.Load<Sprite>("Sprites/BuildingIcons/" + buildingName);
+        if(image.sprite == null) image.sprite = Resources.Load<Sprite>("Sprites/Buildings/" + buildingName);
     }
     public void OnClick()
     {

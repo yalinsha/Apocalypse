@@ -4,6 +4,11 @@ using UnityEngine;
 
 public static class Extensions
 {
+    public static float distance = 0;
+    public static bool tipSingleInfoShown = false;
+    public static bool tipStationableShown = false;
+    public static bool tipAutomaticShown = false;
+    public static bool tipPermanentShown = false;
     public static Vector2Int ToVector2Int(this Vector3Int v)
     {
         return new Vector2Int(v.x, v.y);
@@ -16,5 +21,11 @@ public static class Extensions
     {
         int num = Mathf.FloorToInt(amount);
         return num.ToString();
+    }
+    public static string StringForRateDisplay(float rate)
+    {
+        string ret = rate.ToString("0.00") + "/s";
+        if (rate > 0) ret = "+" + ret;
+        return ret;
     }
 }

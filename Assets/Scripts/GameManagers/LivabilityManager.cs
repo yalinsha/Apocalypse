@@ -22,7 +22,7 @@ public class LivabilityManager : MonoBehaviour
     {
         get;
         private set;
-    }
+    } = 1;//硬编码，防跳变
     readonly HashSet<ILivability> livabilityBuildings = new();
 
     private void Start()
@@ -45,6 +45,7 @@ public class LivabilityManager : MonoBehaviour
                 livabilityBuildings.Remove(livabilityBuilding);
             }
         };
+        EventManager.Instance.onStatusChanged += RecalculateLivability;
     }
     public void RecalculateLivability()
     {
@@ -54,8 +55,9 @@ public class LivabilityManager : MonoBehaviour
             Livability += building.Livability;
         }
         Livability += eventLivability;
-        Livability -= Mathf.FloorToInt(PopulationManager.Instance.currentPopulation / 15);//人口减少宜居度
+        Livability -= Mathf.FloorToInt(PopulationManager.Instance.CurrentPopulation / 15);//人口减少宜居度
         Livability = Mathf.Clamp(Livability, -20, 20);
+        Debug.Log("Recalculating Livability..." + Livability);
         EventManager.Instance.onLivabilityChanged();
     }
 }

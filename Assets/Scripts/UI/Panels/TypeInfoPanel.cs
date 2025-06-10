@@ -11,7 +11,7 @@ public class TypeInfoPanel : BasePanel<TypeInfoPanel>
         BuildingInfoPro buildingInfoPro = BuildingInfoManager.Instance.GetBuildingInfo(buildingName);
         title.text = buildingInfoPro.buildingInfo.nameChinese;
         description.text = buildingInfoPro.buildingInfo.description;
-        info.text = buildingInfoPro.buildingInfo.effect;
+        info.text = buildingInfoPro.buildingInfo.cost;
     }
     private void Start()
     {

@@ -15,13 +15,13 @@ public class ResourceManager : MonoBehaviour
     Dictionary<string, float> resources = new()
     {
         {"electric", 0},
-        {"mine", 0},
-        {"food", 0},
-        {"water", 0},
+        {"mine", 1000},
+        {"food", 20000},
+        {"water", 50000},
         {"oil", 0},
-        {"chip", 0},
-        {"ti", 0},
-        {"carbon", 0},
+        //{"chip", 0},
+        //{"ti", 0},
+        //{"carbon", 0},
         {"nuclear_part", 0},
         {"life_part", 0},
         {"shell_part", 0},
@@ -34,9 +34,9 @@ public class ResourceManager : MonoBehaviour
         {"food", 0},
         {"water", 0},
         {"oil", 0},
-        {"chip", 0},
-        {"ti", 0},
-        {"carbon", 0},
+        //{"chip", 0},
+        //{"ti", 0},
+        //{"carbon", 0},
     };
     readonly HashSet<ProductionBuilding> productionBuildings = new();
     readonly HashSet<BaseBuilding> robotFactories = new();
@@ -80,11 +80,16 @@ public class ResourceManager : MonoBehaviour
         };
         EventManager.Instance.onStartUpgrade += (BaseBuilding building) =>
         {
+            Debug.Log("onStartUpgrade in ResourceManager");
             if (!(freeUpgradeDict.ContainsKey(building.buildingName) && freeUpgradeDict[building.buildingName]) || building.level == 0)//如果建造也可以免费就不加最后一个条件
             {
                 ChangeResources(building.buildingInfoPro.upgradeCostList[building.level],-1);
             }
             freeUpgradeDict[building.buildingName] = false;
+        };
+        EventManager.Instance.onSolarStormStart += () =>
+        {
+            ChangeResource("mine", -SolarStormManager.Instance.currentInfo.mineDemand);
         };
         EventManager.Instance.onStatusChanged += () =>
         {
@@ -105,6 +110,8 @@ public class ResourceManager : MonoBehaviour
                     productionRate[pair.Key] += pair.Value * productionBuilding.multiplier;
                 }
             }
+            productionRate["water"] += -PopulationManager.waterConsumption * PopulationManager.Instance.CurrentPopulation * BuffManager.Instance.waterConsumptionMultiplier;
+            productionRate["food"] += -PopulationManager.foodConsumption * PopulationManager.Instance.CurrentPopulation * BuffManager.Instance.foodConsumptionMultiplier;
         };
     }
     public void ChangeResources(Dictionary<string,float> dict, float multiplier = 1)
@@ -112,6 +119,13 @@ public class ResourceManager : MonoBehaviour
         foreach (KeyValuePair<string, float> pair in dict)
         {
             ChangeResource(pair.Key, pair.Value * multiplier);
+        }
+    }
+    public void ChangeResourcesByPercent(Dictionary<string, float> dict, float multiplier = 1)
+    {
+        foreach (KeyValuePair<string, float> pair in dict)
+        {
+            ChangeResource(pair.Key, pair.Value * multiplier * GetResourceAmount(pair.Key));
         }
     }
     public void ChangeResource(string type, float amount)
@@ -138,12 +152,29 @@ public class ResourceManager : MonoBehaviour
     }
     private void Update()
     {
+        if (GameEventManager.Instance.isGameOver) return;
         foreach (string resource in productionRate.Keys.ToList())
         {
             if(resources[resource] < 0)
             {
                 resources[resource] = 0;
                 EventManager.Instance.onResourceExhausted(resource);
+                if (productionRate[resource] < 0)
+                {
+                    GameEventManager.Instance.isGameOver = true;
+                    if(resource == "food")
+                        GameEventManager.Instance.ShowTipByDescription("starve");
+                    else if (resource =="water")
+                        GameEventManager.Instance.ShowTipByDescription("thirst");
+                    else
+                    {
+                        throw new System.Exception("Resources still being consumed. Something is wrong.");
+                    }
+                }
+                else
+                {
+                    GameEventManager.Instance.ShowTipByDescription(resource + "Exhaust");
+                }
             }
         }
     }

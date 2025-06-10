@@ -3,17 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SolarStormInfo
+public struct SolarStormInfo
 {
     public float stormTime;
-    public float foodDemand;
-    public float waterDemand;
     public float mineDemand;
-    public float oilDemand;
-    public float electricDemand;
-    public float carbonDemand;
-    public float tiDemand;
-    public float chipDemand;
+    public SolarStormInfo(float time,float demand)
+    {
+        stormTime = time;
+        mineDemand = demand;
+    }
 }
 public class SolarStormInfoCollection
 {
@@ -32,44 +30,50 @@ public class SolarStormManager : MonoBehaviour
     {
         Instance = this;
     }
-    float time;
-    float unscaledTime;
-    float stormDuration = 5;//
-    float stormStart;
+    public float time = 0;
+    const float stormDuration = 15;//硬编码
+    float StormStart
+    {
+        get 
+        {
+            return currentInfo.stormTime;
+        }
+    }
     public bool IsInStorm
     {
         get; private set;
     } = false;
-
-    SolarStormInfo info;
+    /// <summary>
+    /// 即将来临或正在经历的风暴数据
+    /// </summary>
+    public SolarStormInfo currentInfo;
     SolarStormInfoCollection collection;
-    int index = 0;
-    bool isGameOver = false;
+    int index = 1;//0
+    //bool isGameOver = false;
 
-    public float TimeLeft => stormStart - time;
+    public float TimeLeft => StormStart - time;
 
     private void Start()
     {
         collection = XmlDataManager.Instance.Load<SolarStormInfoCollection>("solar");
-        stormStart = collection.infos[0].stormTime;
+        currentInfo = new SolarStormInfo(180,200);
     }
     public void StartSolarStorm()
     {
-        Time.timeScale = 0;
         IsInStorm = true;
         EventManager.Instance.onSolarStormStart();
+        EventManager.Instance.onStatusChanged();
+    }
+    public void EndSolarStorm()
+    {
+        IsInStorm = false;
+        EventManager.Instance.onSolarStormEnd();
+        EventManager.Instance.onStatusChanged();
     }
     void CheckGameOver()
     {
-        isGameOver = (info.foodDemand > ResourceManager.Instance.GetResourceAmount("food")
-        || info.waterDemand > ResourceManager.Instance.GetResourceAmount("water")
-        || info.mineDemand > ResourceManager.Instance.GetResourceAmount("mine")
-        || info.oilDemand > ResourceManager.Instance.GetResourceAmount("oil")
-        || info.electricDemand > ResourceManager.Instance.GetResourceAmount("electric")
-        || info.carbonDemand > ResourceManager.Instance.GetResourceAmount("carbon")
-        || info.tiDemand > ResourceManager.Instance.GetResourceAmount("ti")
-        || info.chipDemand > ResourceManager.Instance.GetResourceAmount("chip"));
-        if (isGameOver)
+        GameEventManager.Instance.isGameOver = (currentInfo.mineDemand > ResourceManager.Instance.GetResourceAmount("mine"));
+        if (GameEventManager.Instance.isGameOver)
         {
             EventManager.Instance.onGameOver();
         }
@@ -77,37 +81,29 @@ public class SolarStormManager : MonoBehaviour
 
     void Update()
     {
-        if (isGameOver) return;
+        time += Time.deltaTime;
+        if (GameEventManager.Instance.isGameOver) return;
         if (!IsInStorm)
         {
-            time += Time.deltaTime;
-
-            if (time > stormStart)
+            if (time > StormStart)
             {
-                info = collection.infos[index];
-                StartSolarStorm();
+                CheckGameOver();
+                if (!GameEventManager.Instance.isGameOver)
+                {
+                    StartSolarStorm();
+                }
             }
         }
         else
         {
-            unscaledTime += Time.unscaledDeltaTime;
-            if (unscaledTime > stormDuration)
+            ResourceManager.Instance.ChangeResource("electric", - ResourceManager.Instance.GetResourceAmount("electric") * 0.03f * Time.deltaTime);
+            if(time > StormStart + stormDuration)
             {
-                IsInStorm = false;
-                EventManager.Instance.onSurvive();
                 ++index;
-                stormStart = collection.infos[index].stormTime;
-                unscaledTime = 0;
+                //currentInfo = collection.infos[index];
+                currentInfo = new SolarStormInfo(index * 300 - 120, 200 * index * index);
+                EndSolarStorm();
             }
-            ResourceManager.Instance.ChangeResource("food", -info.foodDemand / stormDuration * Time.unscaledDeltaTime);
-            ResourceManager.Instance.ChangeResource("water", -info.waterDemand / stormDuration * Time.unscaledDeltaTime);
-            ResourceManager.Instance.ChangeResource("mine", -info.mineDemand / stormDuration * Time.unscaledDeltaTime);
-            ResourceManager.Instance.ChangeResource("oil", -info.oilDemand / stormDuration * Time.unscaledDeltaTime);
-            ResourceManager.Instance.ChangeResource("electric", -info.electricDemand / stormDuration * Time.unscaledDeltaTime);
-            ResourceManager.Instance.ChangeResource("carbon", -info.carbonDemand / stormDuration * Time.unscaledDeltaTime);
-            ResourceManager.Instance.ChangeResource("ti", -info.tiDemand / stormDuration * Time.unscaledDeltaTime);
-            ResourceManager.Instance.ChangeResource("chip", -info.chipDemand / stormDuration * Time.unscaledDeltaTime);
-            CheckGameOver();
         }
     }
 }

@@ -2,12 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 //以Xml形式存储的信息的类原型
-public class BuildingInfo
+public struct BuildingInfo
 {
     public string buildingName;
-    public int type;
     public string restriction;//可建筑于其上的地形种类
-    public int extraRestrictionId;
     public string neighborBonus;
     public int sizeX;
     public int sizeY;
@@ -21,9 +19,10 @@ public class BuildingInfo
     public float stationBonus;
     public string description;
     public string effect;
-    public string upgradeRestriction;
+    public int workersRequired;
     public int group;
     public string nameChinese;
+    public string cost;
 }
 public class BuildingInfoCollection
 {
@@ -41,7 +40,7 @@ public class BuildingInfoPro
     public List<Dictionary<string, float>> singleProductionList;
     public List<Dictionary<string, float>> upgradeCostList;
     public List<float> upgradeDurationList;
-    public List<Dictionary<string, int>> upgradeRestrictionList;
+    //public List<Dictionary<string, int>> upgradeRestrictionList;
     public BuildingInfoPro(BuildingInfo info)
     {
         buildingInfo = info;
@@ -104,20 +103,20 @@ public class BuildingInfoPro
         {
             upgradeDurationList.Add(float.Parse(part));
         }
-        upgradeRestrictionList = new List<Dictionary<string, int>>();
-        parts = buildingInfo.upgradeRestriction.Split(";");
-        foreach (string part in parts)
-        {
-            Dictionary<string, int> dic = new Dictionary<string, int>();
-            string[] pairs = part.Split(",");
-            foreach (string pair in pairs)
-            {
-                string[] element = pair.Split("|");
-                if (element[0] != "")
-                    dic[element[0]] = int.Parse(element[1]);
-            }
-            upgradeRestrictionList.Add(dic);
-        }
+        //upgradeRestrictionList = new List<Dictionary<string, int>>();
+        //parts = buildingInfo.upgradeRestriction.Split(";");
+        //foreach (string part in parts)
+        //{
+        //    Dictionary<string, int> dic = new Dictionary<string, int>();
+        //    string[] pairs = part.Split(",");
+        //    foreach (string pair in pairs)
+        //    {
+        //        string[] element = pair.Split("|");
+        //        if (element[0] != "")
+        //            dic[element[0]] = int.Parse(element[1]);
+        //    }
+        //    upgradeRestrictionList.Add(dic);
+        //}
     }
 }
 /// <summary>

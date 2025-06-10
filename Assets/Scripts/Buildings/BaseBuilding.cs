@@ -15,7 +15,7 @@ public class BaseBuilding : MonoBehaviour
     public bool isUpgrading = false;
     float timeSinceUpgrade;
     float currentUpgradeDuration;
-    readonly Dictionary<Vector2Int, BaseBuilding> landUseMap = MapManager.Instance.landUseMap;
+    Dictionary<Vector2Int, BaseBuilding> landUseMap = MapManager.Instance.landUseMap;
 
     public float TimeLeft => currentUpgradeDuration - timeSinceUpgrade;
 
@@ -35,7 +35,7 @@ public class BaseBuilding : MonoBehaviour
         EventManager.Instance.onStartUpgrade(this);
         isUpgrading = true;
         timeSinceUpgrade = 0;
-        currentUpgradeDuration = buildingInfoPro.upgradeDurationList[level];
+        currentUpgradeDuration = buildingInfoPro.upgradeDurationList[level] * BuffManager.Instance.constructionTimeMultiplier;
     }
     void FinishUpgrade()
     {
@@ -103,13 +103,13 @@ public class BaseBuilding : MonoBehaviour
         {
             return false;
         }
-        foreach (KeyValuePair<string, int> pair in buildingInfoPro.upgradeRestrictionList[level])
-        {
-            if (!MapManager.Instance.highestLevelDict.ContainsKey(pair.Key) || MapManager.Instance.highestLevelDict[pair.Key] < pair.Value)
-            {
-                return false;
-            }
-        }
+        //foreach (KeyValuePair<string, int> pair in buildingInfoPro.upgradeRestrictionList[level])
+        //{
+        //    if (!MapManager.Instance.highestLevelDict.ContainsKey(pair.Key) || MapManager.Instance.highestLevelDict[pair.Key] < pair.Value)
+        //    {
+        //        return false;
+        //    }
+        //}
         if (!ResourceManager.Instance.freeUpgradeDict.ContainsKey(buildingName) || !ResourceManager.Instance.freeUpgradeDict[buildingName])
         {
             foreach (var t in buildingInfoPro.upgradeCostList[level])

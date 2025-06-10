@@ -40,7 +40,7 @@ public class MapRenderer : MonoBehaviour
                 {
                     Vector2Int v = new(i, j);
                     Tile t = null;
-                    if (!MapManager.Instance.visibilityMap.ContainsKey(v) || !MapManager.Instance.visibilityMap[v])
+                    if (!MapManager.Instance.visibilityMap[i+ MapManager.mapSize,j+ MapManager.mapSize])
                     {
                         t = mistTile;
                     }
@@ -65,7 +65,7 @@ public class MapRenderer : MonoBehaviour
             }
         };
     }
-    //地形瓦片在0层，表示不可建造的灰色透明瓦片在1层，建筑瓦片在2层，迷雾瓦片在3层，建造模式的悬浮瓦片在4层
+    //地形瓦片在0层，建筑瓦片在2层，迷雾瓦片在3层，建造模式的悬浮瓦片在4层
     public void EnterConstructionMode(string buildingName)
     {
         currentTile = Resources.Load<Tile>("Tiles/Buildings/" + buildingName);
